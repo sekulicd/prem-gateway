@@ -1,0 +1,317 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "DNS Daemon is designed to manage Domain Name System (DNS) records. \u003cbr /\u003eIt exposes a RESTful API that allows for the creation, modification, retrieval, and deletion of DNS information, as well as checking the status of a DNS entry. \u003cbr /\u003e The DNS information includes attributes such as domain, subdomain, A records, and node names.",
+        "title": "Dns Daemon API",
+        "contact": {}
+    },
+    "paths": {
+        "/dns": {
+            "post": {
+                "description": "This endpoint creates a new DNS record based on the provided information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Creates a new DNS record",
+                "parameters": [
+                    {
+                        "description": "dns information",
+                        "name": "DnsInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.DnsInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dns/check": {
+            "get": {
+                "description": "This endpoint checks if the service is up and running",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Check if the service is up and running",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/dns/existing": {
+            "get": {
+                "description": "This endpoint retrieves the existing DNS record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Retrieves the existing DNS record",
+                "responses": {
+                    "200": {
+                        "description": "Returns the existing DNS record",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.DnsInfo"
+                        }
+                    },
+                    "500": {
+                        "description": "Returns error message for server error",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dns/ip": {
+            "get": {
+                "description": "This endpoint retrieves the IP address of the Gateway",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Retrieves the IP address of the Gateway",
+                "responses": {
+                    "200": {
+                        "description": "Returns IP address of the Gateway",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Returns error message for server error",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dns/status/{domain}": {
+            "get": {
+                "description": "This endpoint checks the status of a DNS record based on the provided domain name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Check status of a DNS record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain Name",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns true if the DNS record is valid, false otherwise",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    "400": {
+                        "description": "Returns error message for invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Returns error message for record not found",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returns error message for server error",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dns/{domain}": {
+            "get": {
+                "description": "This endpoint retrieves a DNS record based on the provided domain name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Retrieves a DNS record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain Name",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the DNS record",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.DnsInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Returns error message for invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Returns error message for record not found",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returns error message for server error",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "This endpoint deletes a DNS record based on the provided domain name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dns"
+                ],
+                "summary": "Deletes a DNS record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain Name",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns status of operation",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Returns error message for invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returns error message for server error",
+                        "schema": {
+                            "$ref": "#/definitions/httphandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "httphandler.DnsInfo": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "node_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "httphandler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "httphandler.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
