@@ -1,0 +1,214 @@
+definitions:
+  httphandler.DnsInfo:
+    properties:
+      domain:
+        type: string
+      email:
+        type: string
+      ip:
+        type: string
+      node_name:
+        type: string
+    type: object
+  httphandler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  httphandler.SuccessResponse:
+    properties:
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: DNS Daemon is designed to manage Domain Name System (DNS) records.
+    <br />It exposes a RESTful API that allows for the creation, modification, retrieval,
+    and deletion of DNS information, as well as checking the status of a DNS entry.
+    <br /> The DNS information includes attributes such as domain, subdomain, A records,
+    and node names.
+  title: Dns Daemon API
+paths:
+  /dns:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new DNS record based on the provided information
+      parameters:
+      - description: dns information
+        in: body
+        name: DnsInfo
+        required: true
+        schema:
+          $ref: '#/definitions/httphandler.DnsInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httphandler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+      summary: Creates a new DNS record
+      tags:
+      - dns
+  /dns/{domain}:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a DNS record based on the provided domain
+        name
+      parameters:
+      - description: Domain Name
+        in: path
+        name: domain
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns status of operation
+          schema:
+            $ref: '#/definitions/httphandler.SuccessResponse'
+        "400":
+          description: Returns error message for invalid input
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "500":
+          description: Returns error message for server error
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+      summary: Deletes a DNS record
+      tags:
+      - dns
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a DNS record based on the provided domain
+        name
+      parameters:
+      - description: Domain Name
+        in: path
+        name: domain
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the DNS record
+          schema:
+            $ref: '#/definitions/httphandler.DnsInfo'
+        "400":
+          description: Returns error message for invalid input
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "404":
+          description: Returns error message for record not found
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "500":
+          description: Returns error message for server error
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+      summary: Retrieves a DNS record
+      tags:
+      - dns
+  /dns/check:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint checks if the service is up and running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Check if the service is up and running
+      tags:
+      - dns
+  /dns/existing:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves the existing DNS record
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the existing DNS record
+          schema:
+            $ref: '#/definitions/httphandler.DnsInfo'
+        "500":
+          description: Returns error message for server error
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+      summary: Retrieves the existing DNS record
+      tags:
+      - dns
+  /dns/ip:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves the IP address of the Gateway
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns IP address of the Gateway
+          schema:
+            type: string
+        "500":
+          description: Returns error message for server error
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+      summary: Retrieves the IP address of the Gateway
+      tags:
+      - dns
+  /dns/status/{domain}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint checks the status of a DNS record based on the provided
+        domain name
+      parameters:
+      - description: Domain Name
+        in: path
+        name: domain
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns true if the DNS record is valid, false otherwise
+          schema:
+            type: boolean
+        "400":
+          description: Returns error message for invalid input
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "404":
+          description: Returns error message for record not found
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+        "500":
+          description: Returns error message for server error
+          schema:
+            $ref: '#/definitions/httphandler.ErrorResponse'
+      summary: Check status of a DNS record
+      tags:
+      - dns
+swagger: "2.0"

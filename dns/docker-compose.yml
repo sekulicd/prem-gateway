@@ -1,0 +1,31 @@
+version: "3.7"
+services:
+  dnsd:
+    container_name: dnsd
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - dnsd-db-pg
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PREM_GATEWAY_DNS_DB_HOST: dnsd-db-pg
+
+  dnsd-db-pg:
+    container_name: dnsd-db-pg
+    image: postgres:14.7
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+
+networks:
+  default:
+    name: prem-gateway-dns
