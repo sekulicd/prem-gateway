@@ -1,0 +1,56 @@
+name: Release prem-gateway Docker images
+
+on: {push: {tags: ['*']}}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_CLI_EXPERIMENTAL: enabled
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          install: true
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push dnsd
+        run: >-
+          docker buildx build --push
+          --file ./dns/Dockerfile
+          --tag ghcr.io/premai-io/prem-gateway/dnsd:latest
+          --tag ghcr.io/premai-io/prem-gateway/dnsd:"${GITHUB_REF#refs/tags/}"
+          --platform linux/arm64,linux/amd64 ./dns
+
+      - name: Build & push controllerd
+        run: >-
+          docker buildx build --push
+          --file ./controller/Dockerfile
+          --tag ghcr.io/premai-io/prem-gateway/controllerd:latest
+          --tag ghcr.io/premai-io/prem-gateway/controllerd:"${GITHUB_REF#refs/tags/}"
+          --platform linux/arm64,linux/amd64 ./controller
+
+      - name: Build & push authd
+        run: >-
+          docker buildx build --push
+          --file ./auth/Dockerfile
+          --tag ghcr.io/premai-io/prem-gateway/authd:latest
+          --tag ghcr.io/premai-io/prem-gateway/authd:"${GITHUB_REF#refs/tags/}"
+          --platform linux/arm64,linux/amd64 ./auth
+
+      - name: Create GitHub Release
+        run: gh release create --generate-notes "${GITHUB_REF#refs/tags/}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
