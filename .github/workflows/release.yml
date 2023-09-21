@@ -4,6 +4,9 @@ on: {push: {tags: ['*']}}
 
 jobs:
   build-and-push:
+    permissions:
+      packages: write
+      contents: read
     runs-on: ubuntu-latest
     env:
       DOCKER_CLI_EXPERIMENTAL: enabled
@@ -53,4 +56,4 @@ jobs:
       - name: Create GitHub Release
         run: gh release create --generate-notes "${GITHUB_REF#refs/tags/}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
