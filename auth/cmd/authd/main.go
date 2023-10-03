@@ -4,7 +4,6 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"runtime"
 )
 
 const apiKey = "dummy-api-key"
@@ -29,6 +28,4 @@ func main() {
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Printf("Auth daemon failed to start: %v", err)
 	}
-
-	runtime.BlockProfile()
 }
