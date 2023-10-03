@@ -320,10 +320,10 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 			if err := restartContainer(ctx, cli, v, labels, nil); err != nil {
 				return fmt.Errorf("failed to restart container %s: %v", v, err)
 			}
-		case premdService:
+		default:
 			labels := map[string]string{
 				"traefik.enable": "true",
-				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("Host(`%s.%s`)", v, domain),
+				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("PathPrefix(`/`) && Host(`%s`)", domain),
 				fmt.Sprintf("traefik.http.routers.%s.entrypoints", v):      "websecure",
 				fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", v): "myresolver",
 			}
