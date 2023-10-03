@@ -323,7 +323,7 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 		default:
 			labels := map[string]string{
 				"traefik.enable": "true",
-				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("PathPrefix(`/`) && Host(`%s`)", domain),
+				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("PathPrefix(`/`) && Host(`%s.%s`)", v, domain),
 				fmt.Sprintf("traefik.http.routers.%s.entrypoints", v):      "websecure",
 				fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", v): "myresolver",
 			}
