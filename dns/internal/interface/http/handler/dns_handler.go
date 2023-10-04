@@ -178,7 +178,7 @@ func (d *dnsHandler) GetGatewayIp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, ipAddr)
+	c.String(http.StatusOK, ipAddr)
 }
 
 // GetExistingDns godoc
