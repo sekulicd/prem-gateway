@@ -20,3 +20,5 @@ datadir/
 
 # Binaries folder
 bin/
+
+**/pg-data/
