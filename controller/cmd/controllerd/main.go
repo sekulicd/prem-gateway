@@ -196,7 +196,7 @@ func getPremServicesForRestart(srvcs []string) map[string]int {
 
 		for _, v := range premServices {
 			if v.Running {
-				svcs[v.Id] = v.RunningPort
+				svcs[v.Id] = v.DefaultPort
 			}
 		}
 	}
