@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Get all container IDs connected to the 'prem-gateway' network
 CONTAINERS=$(docker ps -aq --filter network=prem-gateway)
 
@@ -13,8 +15,7 @@ else
 
     # Remove all containers and their anonymous volumes
     echo "Removing containers and cleaning up volumes..."
-    # shellcheck disable=SC2086
-    docker rm -v $CONTAINERS
+    docker rm -v "$CONTAINERS"
 
     echo "Containers stopped and removed. Volumes cleaned."
 fi
