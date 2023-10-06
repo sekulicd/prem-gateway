@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # Get all container IDs connected to the 'prem-gateway' network
 CONTAINERS=($(docker ps -aq --filter network=prem-gateway))
 
