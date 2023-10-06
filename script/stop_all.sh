@@ -1,9 +1,19 @@
 #!/bin/bash
 
-make down
+# Get all container IDs connected to the 'prem-gateway' network
+CONTAINERS=$(docker ps -aq --filter network=prem-gateway)
 
-cd ./script
+# Check if CONTAINERS is empty (no containers on the network)
+if [ -z "$CONTAINERS" ]; then
+    echo "No containers found on the 'prem-gateway' network."
+else
+    # Stop all containers
+    echo "Stopping containers on 'prem-gateway' network..."
+    docker stop $CONTAINERS
 
-export PREMD_IMAGE
-export PREMAPP_IMAGE
-docker-compose -f docker-compose-box.yml down -v
+    # Remove all containers and their anonymous volumes
+    echo "Removing containers and cleaning up volumes..."
+    docker rm -v $CONTAINERS
+
+    echo "Containers stopped and removed. Volumes cleaned."
+fi
