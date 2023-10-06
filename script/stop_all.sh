@@ -9,10 +9,11 @@ if [ -z "$CONTAINERS" ]; then
 else
     # Stop all containers
     echo "Stopping containers on 'prem-gateway' network..."
-    docker stop $CONTAINERS
+    docker stop "$CONTAINERS"
 
     # Remove all containers and their anonymous volumes
     echo "Removing containers and cleaning up volumes..."
+    # shellcheck disable=SC2086
     docker rm -v $CONTAINERS
 
     echo "Containers stopped and removed. Volumes cleaned."
