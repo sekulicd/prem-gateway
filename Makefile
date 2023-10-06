@@ -139,9 +139,6 @@ runall:
 ## stopall: stop prem-gateway and prem-box
 stopall:
 	chmod +x ./script/stop_all.sh
-	export PREMD_IMAGE=$(PREMD_IMAGE); \
-	export PREMAPP_IMAGE=$(PREMAPP_IMAGE); \
-	export BASIC_AUTH_CREDENTIALS=$(BASIC_AUTH_CREDENTIALS); \
 	./script/stop_all.sh
 
 #### Go lint ####
