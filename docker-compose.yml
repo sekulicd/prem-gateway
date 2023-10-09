@@ -29,7 +29,9 @@ services:
       - prem-gateway
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dnsd.rule=HeadersRegexp(`X-Host-Override`,`dnsd`) && PathPrefix(`/`)"
+      - "traefik.http.routers.dnsd.rule=PathPrefix(`/dnsd`)"
+      - "traefik.http.middlewares.dnsd-strip-prefix.stripprefix.prefixes=/dnsd"
+      - "traefik.http.routers.dnsd.middlewares=dnsd-strip-prefix"
     depends_on:
       - dnsd-db-pg
       - authd

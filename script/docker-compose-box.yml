@@ -11,9 +11,12 @@ services:
       - PREM_REGISTRY_URL=https://raw.githubusercontent.com/premAI-io/prem-registry/main/manifests.json
       - SENTRY_DSN=https://75592545ad6b472e9ad7c8ff51740b73@o1068608.ingest.sentry.io/4505244431941632
       - PROXY_ENABLED=True
+      - DOCKER_NETWORK=prem-gateway
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.premd.rule=HeadersRegexp(`X-Host-Override`,`premd`) && PathPrefix(`/`)"
+      - "traefik.http.routers.premd.rule=PathPrefix(`/premd`)"
+      - "traefik.http.middlewares.premd-strip-prefix.stripprefix.prefixes=/premd"
+      - "traefik.http.routers.premd.middlewares=premd-strip-prefix"
     ports:
       - "8084:8000"
 

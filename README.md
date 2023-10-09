@@ -53,16 +53,10 @@ make up LETSENCRYPT_PROD=true SERVICES=premd,premapp
 
 #### Run prem-gateway with prem-app and prem-daemon:
 ```bash
-make runall PREMD_IMAGE={IMG} PREMAPP_IMAGE={IMG} BASIC_AUTH_CREDENTIALS={CREDENTIALS}
+make runall PREMD_IMAGE={IMG} PREMAPP_IMAGE={IMG}
 ```
 
 #### Stop prem-gateway, prem-app and prem-daemon:
 ```bash
-make stopall PREMD_IMAGE={IMG} PREMAPP_IMAGE={IMG} BASIC_AUTH_CREDENTIALS={CREDENTIALS}
+make stopall PREMD_IMAGE={IMG} PREMAPP_IMAGE={IMG}
 ```
-
-#### To generate proper credentials for basic auth, use bellow command.
-```bash
-echo $(htpasswd -nB {USER}) | sed -e s/\\$/\\$\\$/g
-```
-
