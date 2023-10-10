@@ -23,3 +23,6 @@ make dev-dns
 ## API Documentation
 
 API documentation is available via Swagger at the /docs endpoint, e.g., http://localhost:8080/docs/index.html
+
+## End to end example
+Check end to end test in [here](./../e2e/dns_test.go)
