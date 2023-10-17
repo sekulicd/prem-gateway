@@ -33,7 +33,7 @@ func NewDNSHandler(dnsSvc application.DnsService) (DNSHandler, error) {
 // @Tags dns
 // @Accept json
 // @Produce json
-// @Param DnsInfo body DnsInfo true "dns information"
+// @Param DnsCreateReq body DnsCreateReq true "dns information"
 //
 //	@Success		200		{object}	SuccessResponse
 //	@Failure		400		{object}	ErrorResponse
@@ -42,15 +42,15 @@ func NewDNSHandler(dnsSvc application.DnsService) (DNSHandler, error) {
 //
 // @Router /dns [post]
 func (d *dnsHandler) CreateDnsInfo(c *gin.Context) {
-	var info DnsInfo
-	if err := c.ShouldBindJSON(&info); err != nil {
+	var dnsCreateReq DnsCreateReq
+	if err := c.ShouldBindJSON(&dnsCreateReq); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	if err := d.dnsSvc.CreateDomain(
 		c.Request.Context(),
-		FromHandlerDnsInfoToAppDnsInfo(info),
+		FromHandlerDnsInfoToAppDnsInfo(dnsCreateReq),
 	); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return

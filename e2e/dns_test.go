@@ -58,21 +58,18 @@ func TestDnsFeature(t *testing.T) {
 		t.Fatal("DOMAIN environment variable not set")
 	}
 
-	ip := premGatewayIP
-
 	email := os.Getenv("EMAIL")
 	if email == "" {
 		t.Fatal("EMAIL environment variable not set")
 	}
 
-	dnsInfo := DnsInfo{
+	dnsCreateReq := DnsCreateReq{
 		Domain:   domain,
-		Ip:       ip,
 		Email:    email,
 		NodeName: "prem-gateway",
 	}
 
-	jsonValue, err := json.Marshal(dnsInfo)
+	jsonValue, err := json.Marshal(dnsCreateReq)
 	assert.NoError(t, err)
 
 	resp, err = http.Post(
@@ -86,7 +83,7 @@ func TestDnsFeature(t *testing.T) {
 	time.Sleep(10 * time.Second) // Wait for controller to restart services
 
 	// GET PREMD SERVICES VIA SUBDOMAIN
-	resp, err = http.Get(fmt.Sprintf("https://%s.%s/%s", "premd", dnsInfo.Domain, "v1/services/"))
+	resp, err = http.Get(fmt.Sprintf("https://%s.%s/%s", "premd", dnsCreateReq.Domain, "v1/services/"))
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -95,10 +92,10 @@ func TestDnsFeature(t *testing.T) {
 	assert.NoError(t, err)
 
 	for _, v := range servicesUrls {
-		assert.Equal(t, v.BaseUrl, fmt.Sprintf("https://%s.%s", v.ServiceId, dnsInfo.Domain))
+		assert.Equal(t, v.BaseUrl, fmt.Sprintf("https://%s.%s", v.ServiceId, dnsCreateReq.Domain))
 	}
 
-	resp, err = http.Get(fmt.Sprintf("https://%s.%s/%s", "dnsd", dnsInfo.Domain, "dns/existing"))
+	resp, err = http.Get(fmt.Sprintf("https://%s.%s/%s", "dnsd", dnsCreateReq.Domain, "dns/existing"))
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -107,7 +104,7 @@ func TestDnsFeature(t *testing.T) {
 	resp.Body.Close()
 	err = json.Unmarshal(bodyBytes, &checkDns)
 	assert.NoError(t, err)
-	assert.Equal(t, checkDns.Domain, dnsInfo.Domain)
+	assert.Equal(t, checkDns.Domain, dnsCreateReq.Domain)
 
 	// Assume prem-service gpt4all-lora-q4 docker image is downloaded previously
 
@@ -119,7 +116,7 @@ func TestDnsFeature(t *testing.T) {
 	assert.NoError(t, err)
 
 	resp, err = http.Post(
-		fmt.Sprintf("https://%s.%s/%s", "premd", dnsInfo.Domain, "v1/run-service/"),
+		fmt.Sprintf("https://%s.%s/%s", "premd", dnsCreateReq.Domain, "v1/run-service/"),
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -149,7 +146,7 @@ func TestDnsFeature(t *testing.T) {
 	assert.NoError(t, err)
 
 	resp, err = http.Post(
-		fmt.Sprintf("https://%s.%s/%s", "gpt4all-lora-q4", dnsInfo.Domain, "v1/chat/completions"),
+		fmt.Sprintf("https://%s.%s/%s", "gpt4all-lora-q4", dnsCreateReq.Domain, "v1/chat/completions"),
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -168,6 +165,12 @@ type ExtractedFields struct {
 type DnsInfo struct {
 	Domain   string `json:"domain"`
 	Ip       string `json:"ip"`
+	NodeName string `json:"nodeName"`
+	Email    string `json:"email"`
+}
+
+type DnsCreateReq struct {
+	Domain   string `json:"domain"`
 	Email    string `json:"email"`
 	NodeName string `json:"nodeName"`
 }

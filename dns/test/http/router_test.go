@@ -29,12 +29,13 @@ func TestRouter(t *testing.T) {
 	serverAddress := ":8080"
 	ipSvcMock := new(port.MockIpService)
 	ipSvcMock.
-		On("VerifyDnsRecord", mock.Anything, "100.27.28.72", "dusansekulic.me").
+		On("VerifyDnsRecord", mock.Anything, mock.Anything, "dusansekulic.me").
 		Return(true, nil)
+	ipSvcMock.On("GetHostIp", mock.Anything).Return("1.1.1.1", nil)
 	ipSvcOpt := dnsdhttp.WithIpService(ipSvcMock)
 	controllerdWrapperMock := new(port.MockControllerdWrapper)
 	controllerdWrapperMock.
-		On("DomainProvisioned", mock.Anything, "dusansekulic.me", "dusan.sekulic.mne@gmail.com").
+		On("DomainProvisioned", mock.Anything, "", "dusansekulic.me").
 		Return(nil)
 
 	controllerdWrapperOpt := dnsdhttp.WithControllerdWrapper(controllerdWrapperMock)
@@ -51,18 +52,16 @@ func TestRouter(t *testing.T) {
 
 	//CREATE DNS INFO
 	w := httptest.NewRecorder()
-	dnsInfo := httphandler.DnsInfo{
-		Domain:   "dusansekulic.me",
-		Ip:       "100.27.28.72",
-		NodeName: "noder",
-		Email:    "dusan.sekulic.mne@gmail.com",
+	dnsCreateReq := httphandler.DnsCreateReq{
+		Domain: "dusansekulic.me",
 	}
-	dnsInfoBytes, err := json.Marshal(dnsInfo)
+	dnsInfoBytes, err := json.Marshal(dnsCreateReq)
 	require.NoError(t, err)
-	req, _ := http.NewRequest(
+	req, err := http.NewRequest(
 		http.MethodPost, "/dns", bytes.NewReader(dnsInfoBytes),
 	)
 	ginRouter.ServeHTTP(w, req)
+	require.NoError(t, err)
 	require.Equal(t, http.StatusCreated, w.Code)
 
 	//GET DNS INFO
@@ -72,13 +71,11 @@ func TestRouter(t *testing.T) {
 	)
 	ginRouter.ServeHTTP(w, req)
 	require.Equal(t, http.StatusOK, w.Code)
-	var dnsInfos httphandler.DnsInfo
-	err = json.Unmarshal(w.Body.Bytes(), &dnsInfos)
+	var resp httphandler.DnsInfo
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	require.Equal(t, dnsInfo.Domain, dnsInfos.Domain)
-	require.Equal(t, dnsInfo.Ip, dnsInfos.Ip)
-	require.Equal(t, dnsInfo.NodeName, dnsInfos.NodeName)
-	require.Equal(t, dnsInfo.Email, dnsInfos.Email)
+	require.Equal(t, dnsCreateReq.Domain, resp.Domain)
+	require.NotEmpty(t, resp.Ip)
 
 	//CHECK DNS STATUS
 	w = httptest.NewRecorder()
