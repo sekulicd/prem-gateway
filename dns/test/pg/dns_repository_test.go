@@ -1,8 +1,18 @@
 package pgtest
 
-import "prem-gateway/dns/internal/core/domain"
+import (
+	"prem-gateway/dns/internal/core/domain"
+	testutil "prem-gateway/dns/test"
+)
 
 func (p *PgDbTestSuite) TestDnsRepository() {
+	err := testutil.SetupDB()
+	p.NoError(err)
+	defer func() {
+		err = testutil.TruncateDB()
+		p.NoError(err)
+	}()
+
 	dnsInfo, err := dbSvc.DnsRepository().Get(ctx, "dummy")
 	p.EqualError(err, domain.ErrEntityNotFound.Error())
 	p.Nil(dnsInfo)
