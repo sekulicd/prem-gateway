@@ -42,7 +42,12 @@ func (d *dnsService) CreateDomain(ctx context.Context, dnsInfo DnsInfo) error {
 		return domain.ErrAlreadyExists
 	}
 
-	valid, err := d.ipSvc.VerifyDnsRecord(ctx, dnsInfo.Ip, dnsInfo.Domain)
+	ip, err := d.GetGatewayIp(ctx)
+	if err != nil {
+		return err
+	}
+
+	valid, err := d.ipSvc.VerifyDnsRecord(ctx, ip, dnsInfo.Domain)
 	if err != nil {
 		return err
 	}

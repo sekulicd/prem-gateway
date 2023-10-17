@@ -51,13 +51,10 @@ func TestRouter(t *testing.T) {
 
 	//CREATE DNS INFO
 	w := httptest.NewRecorder()
-	dnsInfo := httphandler.DnsInfo{
-		Domain:   "dusansekulic.me",
-		Ip:       "100.27.28.72",
-		NodeName: "noder",
-		Email:    "dusan.sekulic.mne@gmail.com",
+	dnsCreateReq := httphandler.DnsCreateReq{
+		Domain: "dusansekulic.me",
 	}
-	dnsInfoBytes, err := json.Marshal(dnsInfo)
+	dnsInfoBytes, err := json.Marshal(dnsCreateReq)
 	require.NoError(t, err)
 	req, _ := http.NewRequest(
 		http.MethodPost, "/dns", bytes.NewReader(dnsInfoBytes),
@@ -72,13 +69,11 @@ func TestRouter(t *testing.T) {
 	)
 	ginRouter.ServeHTTP(w, req)
 	require.Equal(t, http.StatusOK, w.Code)
-	var dnsInfos httphandler.DnsInfo
-	err = json.Unmarshal(w.Body.Bytes(), &dnsInfos)
+	var resp httphandler.DnsInfo
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	require.Equal(t, dnsInfo.Domain, dnsInfos.Domain)
-	require.Equal(t, dnsInfo.Ip, dnsInfos.Ip)
-	require.Equal(t, dnsInfo.NodeName, dnsInfos.NodeName)
-	require.Equal(t, dnsInfo.Email, dnsInfos.Email)
+	require.Equal(t, dnsCreateReq.Domain, resp.Domain)
+	require.NotEmpty(t, resp.Ip)
 
 	//CHECK DNS STATUS
 	w = httptest.NewRecorder()
