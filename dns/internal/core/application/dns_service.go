@@ -46,8 +46,9 @@ func (d *dnsService) CreateDomain(ctx context.Context, dnsInfo DnsInfo) error {
 	if err != nil {
 		return err
 	}
+	dnsInfo.Ip = ip
 
-	valid, err := d.ipSvc.VerifyDnsRecord(ctx, ip, dnsInfo.Domain)
+	valid, err := d.ipSvc.VerifyDnsRecord(ctx, dnsInfo.Ip, dnsInfo.Domain)
 	if err != nil {
 		return err
 	}
