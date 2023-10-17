@@ -29,12 +29,13 @@ func TestRouter(t *testing.T) {
 	serverAddress := ":8080"
 	ipSvcMock := new(port.MockIpService)
 	ipSvcMock.
-		On("VerifyDnsRecord", mock.Anything, "100.27.28.72", "dusansekulic.me").
+		On("VerifyDnsRecord", mock.Anything, mock.Anything, "dusansekulic.me").
 		Return(true, nil)
+	ipSvcMock.On("GetHostIp", mock.Anything).Return("1.1.1.1", nil)
 	ipSvcOpt := dnsdhttp.WithIpService(ipSvcMock)
 	controllerdWrapperMock := new(port.MockControllerdWrapper)
 	controllerdWrapperMock.
-		On("DomainProvisioned", mock.Anything, "dusansekulic.me", "dusan.sekulic.mne@gmail.com").
+		On("DomainProvisioned", mock.Anything, "", "dusansekulic.me").
 		Return(nil)
 
 	controllerdWrapperOpt := dnsdhttp.WithControllerdWrapper(controllerdWrapperMock)
@@ -56,10 +57,11 @@ func TestRouter(t *testing.T) {
 	}
 	dnsInfoBytes, err := json.Marshal(dnsCreateReq)
 	require.NoError(t, err)
-	req, _ := http.NewRequest(
+	req, err := http.NewRequest(
 		http.MethodPost, "/dns", bytes.NewReader(dnsInfoBytes),
 	)
 	ginRouter.ServeHTTP(w, req)
+	require.NoError(t, err)
 	require.Equal(t, http.StatusCreated, w.Code)
 
 	//GET DNS INFO
