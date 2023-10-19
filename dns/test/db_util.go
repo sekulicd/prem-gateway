@@ -1,4 +1,4 @@
-package pgtest
+package testutil
 
 import (
 	"context"

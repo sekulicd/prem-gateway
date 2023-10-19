@@ -2,6 +2,12 @@ package httphandler
 
 import "prem-gateway/dns/internal/core/application"
 
+type DnsCreateReq struct {
+	Domain   string `json:"domain"`
+	NodeName string `json:"node_name"`
+	Email    string `json:"email"`
+}
+
 type DnsInfo struct {
 	Domain   string `json:"domain"`
 	Ip       string `json:"ip"`
@@ -9,10 +15,9 @@ type DnsInfo struct {
 	Email    string `json:"email"`
 }
 
-func FromHandlerDnsInfoToAppDnsInfo(hdi DnsInfo) application.DnsInfo {
+func FromHandlerDnsInfoToAppDnsInfo(hdi DnsCreateReq) application.DnsInfo {
 	return application.DnsInfo{
 		Domain:   hdi.Domain,
-		Ip:       hdi.Ip,
 		NodeName: hdi.NodeName,
 		Email:    hdi.Email,
 	}

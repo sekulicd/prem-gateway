@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/suite"
 	pgdb "prem-gateway/dns/internal/infrastructure/storage/pg"
+	testutil "prem-gateway/dns/test"
 )
 
 var (
@@ -31,13 +32,13 @@ func (p *PgDbTestSuite) SetupSuite() {
 
 	dbSvc = svc
 
-	if err := SetupDB(); err != nil {
+	if err := testutil.SetupDB(); err != nil {
 		p.FailNow(err.Error())
 	}
 }
 
 func (p *PgDbTestSuite) TearDownSuite() {
-	if err := TruncateDB(); err != nil {
+	if err := testutil.TruncateDB(); err != nil {
 		p.FailNow(err.Error())
 	}
 
@@ -45,7 +46,7 @@ func (p *PgDbTestSuite) TearDownSuite() {
 }
 
 func (p *PgDbTestSuite) BeforeTest(suiteName, testName string) {
-	if err := TruncateDB(); err != nil {
+	if err := testutil.TruncateDB(); err != nil {
 		p.FailNow(err.Error())
 	}
 }
