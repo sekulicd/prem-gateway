@@ -4,7 +4,8 @@ PONY: up down runall stopall
 up:
 	export POSTGRES_USER=root; \
 	export POSTGRES_PASSWORD=secret; \
-	export POSTGRES_DB=dnsd-db; \
+	export DNSD_POSTGRES_DB=dnsd-db; \
+	export AUTHD_POSTGRES_DB=authd-db; \
 	DOCKER_BUILDKIT=0 docker-compose up -d --build
 
 ## down: stop prem-gateway
