@@ -121,7 +121,7 @@ func (s *server) Router() http.Handler {
 	})
 
 	ginEngine.POST("/auth/login", s.authHandler.LogIn)
-	ginEngine.POST("/auth/verify", s.authHandler.IsRequestAllowed)
+	ginEngine.GET("/auth/verify", s.authHandler.IsRequestAllowed)
 	ginEngine.POST("/auth/api-key", s.authHandler.CreateApiKey)
 	ginEngine.GET("/auth/api-key/service", s.authHandler.GetServiceApiKey)
 	return ginEngine

@@ -191,7 +191,7 @@ func newApiKeyInfo(apiKey domain.ApiKey) apiKeyInfo {
 		id:                  apiKey.ID,
 		allowedEndpoint:     apiKey.Service,
 		firstRequestInRange: nil,
-		requestsPerRange:    apiKey.RateLimit.RequestsPerRange,
+		requestsPerRange:    apiKey.RateLimit.RequestsPerRange, //TODO check if nil
 		rangeInSeconds:      apiKey.RateLimit.RangeInSeconds,
 		requestCount:        0,
 		isRootKey:           apiKey.IsRoot,

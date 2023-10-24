@@ -61,3 +61,4 @@ func main() {
 //traefik labels
 //controllerd labels
 //remove basic auth
+//handle panic recovery
