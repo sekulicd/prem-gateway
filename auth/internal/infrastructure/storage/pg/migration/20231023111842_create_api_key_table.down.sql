@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS api_key;
+
+DROP TABLE IF EXISTS rate_limit;
