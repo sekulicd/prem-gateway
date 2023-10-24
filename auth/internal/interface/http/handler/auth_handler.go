@@ -1,6 +1,7 @@
 package httphandler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -32,7 +33,7 @@ func NewAuthHandler(
 	}, nil
 }
 
-func (a authHandler) LogIn(c *gin.Context) {
+func (a *authHandler) LogIn(c *gin.Context) {
 	user := c.Query("user")
 	pass := c.Query("pass")
 
@@ -49,7 +50,7 @@ func (a authHandler) LogIn(c *gin.Context) {
 	})
 }
 
-func (a authHandler) CreateApiKey(c *gin.Context) {
+func (a *authHandler) CreateApiKey(c *gin.Context) {
 	var req CreateApiKey
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -71,7 +72,7 @@ func (a authHandler) CreateApiKey(c *gin.Context) {
 	})
 }
 
-func (a authHandler) GetServiceApiKey(c *gin.Context) {
+func (a *authHandler) GetServiceApiKey(c *gin.Context) {
 	service := c.Param("service")
 
 	apiKey, err := a.apiKeySvc.GetServiceApiKey(c, service)
@@ -87,7 +88,8 @@ func (a authHandler) GetServiceApiKey(c *gin.Context) {
 	})
 }
 
-func (a authHandler) IsRequestAllowed(c *gin.Context) {
+func (a *authHandler) IsRequestAllowed(c *gin.Context) {
+	fmt.Println("IsRequestAllowed")
 	apiKey := c.GetHeader("Authorization")
 	host := c.GetHeader("X-Forwarded-Host")
 	uri := c.GetHeader("X-Forwarded-Uri")
@@ -95,6 +97,9 @@ func (a authHandler) IsRequestAllowed(c *gin.Context) {
 	log.Infof("Authorization header: %s\n", apiKey)
 	log.Infof("X-Forwarded-Host header: %s\n", host)
 	log.Infof("X-Forwarded-Uri header: %s\n", uri)
+	fmt.Println(apiKey)
+	fmt.Println(host)
+	fmt.Println(uri)
 
 	service := extractService(host, uri)
 	if err := a.apiKeySvc.AllowRequest(apiKey, service); err != nil {
