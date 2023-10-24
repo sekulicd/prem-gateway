@@ -93,6 +93,30 @@ func (_m *MockApiKeyRepository) GetApiKey(ctx context.Context, id string) (*ApiK
 	return r0, r1
 }
 
+// GetRootApiKey provides a mock function with given fields: ctx
+func (_m *MockApiKeyRepository) GetRootApiKey(ctx context.Context) (string, error) {
+	ret := _m.Called(ctx)
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (string, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetServiceApiKey provides a mock function with given fields: ctx, service
 func (_m *MockApiKeyRepository) GetServiceApiKey(ctx context.Context, service string) (*ApiKey, error) {
 	ret := _m.Called(ctx, service)

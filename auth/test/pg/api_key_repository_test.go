@@ -3,23 +3,23 @@ package pgtest
 import "prem-gateway/auth/internal/core/domain"
 
 func (p *PgDbTestSuite) TestApiKeyRepository() {
-	apiKey, err := domain.NewApiKey(true, "", domain.RateLimit{})
-	p.NoError(err)
+	rootApiKey := domain.NewRootApiKey("rootKey")
 
-	err = repositorySvc.ApiKeyRepository().CreateApiKey(ctx, *apiKey)
+	err := repositorySvc.ApiKeyRepository().CreateApiKey(ctx, *rootApiKey)
 	p.NoError(err)
 
 	keys, err := repositorySvc.ApiKeyRepository().GetAllApiKeys(ctx)
 	p.NoError(err)
 
 	p.Equal(1, len(keys))
-	p.Equal(apiKey.ID, keys[0].ID)
+	p.Equal(rootApiKey.ID, keys[0].ID)
 	p.Equal(true, keys[0].IsRoot)
 	p.Nil(keys[0].RateLimit)
 	p.Equal("", keys[0].Service)
 
-	apiKey, err = domain.NewApiKey(
-		false, "mistral", domain.RateLimit{
+	apiKey, err := domain.NewApiKey(
+		"mistral",
+		domain.RateLimit{
 			RequestsPerRange: 10,
 			RangeInSeconds:   60,
 		},
@@ -29,7 +29,8 @@ func (p *PgDbTestSuite) TestApiKeyRepository() {
 	keyID1 := apiKey.ID
 
 	apiKey, err = domain.NewApiKey(
-		false, "vicuna", domain.RateLimit{
+		"vicuna",
+		domain.RateLimit{
 			RequestsPerRange: 5,
 			RangeInSeconds:   120,
 		},
@@ -58,7 +59,6 @@ func (p *PgDbTestSuite) TestApiKeyRepository() {
 
 	//check unique constraint on service name
 	apiKey, err = domain.NewApiKey(
-		false,
 		"mistral",
 		domain.RateLimit{
 			RequestsPerRange: 10,
@@ -80,4 +80,8 @@ func (p *PgDbTestSuite) TestApiKeyRepository() {
 
 	apiKey, err = repositorySvc.ApiKeyRepository().GetServiceApiKey(ctx, "dummy")
 	p.Equal(domain.ErrApiKeyNotFound, err)
+
+	rapk, err := repositorySvc.ApiKeyRepository().GetRootApiKey(ctx)
+	p.NoError(err)
+	p.Equal(rootApiKey.ID, rapk)
 }

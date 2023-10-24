@@ -126,4 +126,6 @@ vet:
 mock:
 	cd ./internal/core/domain/; \
 	mockery --name=ApiKeyRepository --structname=MockApiKeyRepository \
-	--output=./ --outpkg=port --filename=api_key_repository_mock.go --inpackage;
+	--output=./ --outpkg=port --filename=api_key_repository_mock.go --inpackage; \
+	mockery --name=RepositoryService --structname=MockRepositoryService \
+    	--output=./ --outpkg=port --filename=repository_service_mock.go --inpackage;

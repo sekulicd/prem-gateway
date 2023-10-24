@@ -156,3 +156,14 @@ func (a *apiKeyRepositoryImpl) GetServiceApiKey(
 		},
 	}, nil
 }
+
+func (a *apiKeyRepositoryImpl) GetRootApiKey(
+	ctx context.Context,
+) (string, error) {
+	id, err := a.querier.GetRootApiKey(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}

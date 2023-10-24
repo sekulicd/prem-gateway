@@ -14,7 +14,7 @@ const (
 // authorize specific endpoints with rate limit constraints.
 type ApiKey struct {
 	ID        string     // ID is a unique identifier for the API key.
-	Services  []string   // Services lists the services that this API key can access.
+	Service   string     // Service that this API key can access.
 	RateLimit *RateLimit // RateLimit defines the request constraints over a specific time range for this API key.
 	IsRoot    bool       // IsRoot specifies whether this API key is a root key. Root key can access all endpoints.
 }
@@ -26,7 +26,7 @@ type RateLimit struct {
 }
 
 func NewApiKey(
-	isRootKey bool, services []string, limit RateLimit,
+	service string, limit RateLimit,
 ) (*ApiKey, error) {
 	key, err := genKey()
 	if err != nil {
@@ -35,10 +35,6 @@ func NewApiKey(
 
 	rLimit := new(RateLimit)
 	if limit.RequestsPerRange > 0 {
-		if isRootKey {
-			return nil, fmt.Errorf("root keys cannot have rate limits")
-		}
-
 		if limit.RangeInSeconds <= 0 {
 			return nil, fmt.Errorf("invalid rate limit range")
 		}
@@ -47,22 +43,20 @@ func NewApiKey(
 		rLimit.RangeInSeconds = limit.RangeInSeconds
 	}
 
-	if len(services) > 0 {
-		if isRootKey {
-			return nil, fmt.Errorf(
-				"root keys cannot have endpoints constraints",
-			)
-		}
-	}
-
 	apiKey := &ApiKey{
 		ID:        key,
-		Services:  services,
+		Service:   service,
 		RateLimit: rLimit,
-		IsRoot:    isRootKey,
 	}
 
 	return apiKey, nil
+}
+
+func NewRootApiKey(rootID string) *ApiKey {
+	return &ApiKey{
+		ID:     rootID,
+		IsRoot: true,
+	}
 }
 
 func genKey() (string, error) {

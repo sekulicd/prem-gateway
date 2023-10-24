@@ -1,8 +1,7 @@
 package application
 
 type CreateApiKeyReq struct {
-	IsRootKey        bool
-	Services         []string
+	Service          string
 	RequestsPerRange int
 	RangeInSeconds   int
 }

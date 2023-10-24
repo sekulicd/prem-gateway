@@ -13,4 +13,6 @@ type ApiKeyRepository interface {
 	GetAllApiKeys(ctx context.Context) ([]ApiKey, error)
 	// GetServiceApiKey returns the API key for the given service.
 	GetServiceApiKey(ctx context.Context, service string) (*ApiKey, error)
+	//GetRootApiKey returns the root API key.
+	GetRootApiKey(ctx context.Context) (string, error)
 }

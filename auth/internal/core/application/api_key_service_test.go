@@ -15,16 +15,16 @@ var (
 )
 
 func TestCreateApiKey(t *testing.T) {
-	repo := new(domain.MockApiKeyRepository)
-	repo.On("GetAllApiKeys", mock.Anything).Return(nil, nil)
+	apiKeyRepo := new(domain.MockApiKeyRepository)
+	apiKeyRepo.On("GetAllApiKeys", mock.Anything).Return(nil, nil)
+	apiKeyRepo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	repo := new(domain.MockRepositoryService)
+	repo.On("ApiKeyRepository").Return(apiKeyRepo)
 
-	service, _ := NewApiKeyService(ctx, repo)
-
-	repo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	service, _ := NewApiKeyService(ctx, "rootKey", repo)
 
 	keyReq := CreateApiKeyReq{
-		IsRootKey:        false,
-		Services:         []string{"service1"},
+		Service:          "service1",
 		RequestsPerRange: 5,
 		RangeInSeconds:   10,
 	}
@@ -36,21 +36,24 @@ func TestCreateApiKey(t *testing.T) {
 }
 
 func TestAllowRequest(t *testing.T) {
-	repo := new(domain.MockApiKeyRepository)
+	apiKeyRepo := new(domain.MockApiKeyRepository)
 	keys := []domain.ApiKey{
 		{
-			ID:       "test-key",
-			Services: []string{"test-service"},
-			IsRoot:   false,
+			ID:      "test-key",
+			Service: "test-service",
+			IsRoot:  false,
 			RateLimit: &domain.RateLimit{
 				RequestsPerRange: 5,
 				RangeInSeconds:   10,
 			},
 		},
 	}
-	repo.On("GetAllApiKeys", mock.Anything).Return(keys, nil)
+	apiKeyRepo.On("GetAllApiKeys", mock.Anything).Return(keys, nil)
+	apiKeyRepo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	repo := new(domain.MockRepositoryService)
+	repo.On("ApiKeyRepository").Return(apiKeyRepo)
 
-	service, _ := NewApiKeyService(ctx, repo)
+	service, _ := NewApiKeyService(ctx, "rootKey", repo)
 
 	// Valid key and path
 	assert.True(t, service.AllowRequest("test-key", "test-service"))
@@ -63,12 +66,14 @@ func TestAllowRequest(t *testing.T) {
 }
 
 func TestGetServiceApiKey(t *testing.T) {
-	repo := new(domain.MockApiKeyRepository)
-	repo.On("GetAllApiKeys", mock.Anything).Return(nil, nil)
-	service, _ := NewApiKeyService(ctx, repo)
+	apiKeyRepo := new(domain.MockApiKeyRepository)
+	apiKeyRepo.On("GetAllApiKeys", mock.Anything).Return(nil, nil)
 	testServiceKey := &domain.ApiKey{ID: "service-key"}
-
-	repo.On("GetServiceApiKey", mock.Anything, "test-service").Return(testServiceKey, nil)
+	apiKeyRepo.On("GetServiceApiKey", mock.Anything, "test-service").Return(testServiceKey, nil)
+	repo := new(domain.MockRepositoryService)
+	repo.On("ApiKeyRepository").Return(apiKeyRepo)
+	apiKeyRepo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	service, _ := NewApiKeyService(ctx, "rootKey", repo)
 
 	keyID, err := service.GetServiceApiKey(context.Background(), "test-service")
 
@@ -77,21 +82,23 @@ func TestGetServiceApiKey(t *testing.T) {
 }
 
 func TestRateLimit(t *testing.T) {
-	repo := new(domain.MockApiKeyRepository)
+	apiKeyRepo := new(domain.MockApiKeyRepository)
 	keys := []domain.ApiKey{
 		{
-			ID:       "rate-limit-key",
-			Services: []string{"test-service"},
-			IsRoot:   false,
+			ID:      "rate-limit-key",
+			Service: "test-service",
+			IsRoot:  false,
 			RateLimit: &domain.RateLimit{
 				RequestsPerRange: 2,
 				RangeInSeconds:   5,
 			},
 		},
 	}
-	repo.On("GetAllApiKeys", mock.Anything).Return(keys, nil)
-
-	service, _ := NewApiKeyService(ctx, repo)
+	apiKeyRepo.On("GetAllApiKeys", mock.Anything).Return(keys, nil)
+	repo := new(domain.MockRepositoryService)
+	repo.On("ApiKeyRepository").Return(apiKeyRepo)
+	apiKeyRepo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	service, _ := NewApiKeyService(ctx, "rootKey", repo)
 
 	assert.True(t, service.AllowRequest("rate-limit-key", "test-service"))
 	assert.True(t, service.AllowRequest("rate-limit-key", "test-service"))
@@ -104,19 +111,20 @@ func TestRateLimit(t *testing.T) {
 }
 
 func TestRequestCount(t *testing.T) {
-	repo := new(domain.MockApiKeyRepository)
-	repo.On("GetAllApiKeys", mock.Anything).Return(nil, nil)
-	repo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
-
-	service, err := NewApiKeyService(ctx, repo)
+	apiKeyRepo := new(domain.MockApiKeyRepository)
+	apiKeyRepo.On("GetAllApiKeys", mock.Anything).Return(nil, nil)
+	apiKeyRepo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	repo := new(domain.MockRepositoryService)
+	repo.On("ApiKeyRepository").Return(apiKeyRepo)
+	apiKeyRepo.On("CreateApiKey", mock.Anything, mock.Anything).Return(nil)
+	service, err := NewApiKeyService(ctx, "rootKey", repo)
 	if err != nil {
 		t.Fatalf("Error initializing the service: %v", err)
 	}
 
 	// Create a new API key
 	keyReq := CreateApiKeyReq{
-		IsRootKey:        false,
-		Services:         []string{"test"},
+		Service:          "test",
 		RequestsPerRange: 5,
 		RangeInSeconds:   3,
 	}

@@ -91,6 +91,17 @@ func (q *Queries) GetApiKeyForServiceName(ctx context.Context, serviceName sql.N
 	return items, nil
 }
 
+const getRootApiKey = `-- name: GetRootApiKey :one
+SELECT id FROM api_key WHERE is_root = true
+`
+
+func (q *Queries) GetRootApiKey(ctx context.Context) (string, error) {
+	row := q.db.QueryRow(ctx, getRootApiKey)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
 const insertApiKey = `-- name: InsertApiKey :exec
 INSERT INTO api_key (id, is_root, rate_limit_id, service_name) VALUES ($1, $2, $3, $4)
 `

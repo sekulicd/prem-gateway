@@ -13,7 +13,7 @@ type ApiKeyService interface {
 	// CreateApiKey creates a new API key.
 	CreateApiKey(ctx context.Context, key CreateApiKeyReq) (string, error)
 	// AllowRequest checks if a given API key is allowed to access a specified path.
-	AllowRequest(apiKey string, path string) bool
+	AllowRequest(apiKey string, path string) error
 	// GetServiceApiKey fetches the API key for a specific service.
 	GetServiceApiKey(ctx context.Context, service string) (string, error)
 }
@@ -21,10 +21,11 @@ type ApiKeyService interface {
 // NewApiKeyService constructs a new instance of the ApiKeyService.
 func NewApiKeyService(
 	ctx context.Context,
-	apiKeyRepository domain.ApiKeyRepository,
+	rootApiKey string,
+	repositorySvc domain.RepositoryService,
 ) (ApiKeyService, error) {
 	keysDb := make(map[string]apiKeyInfo)
-	keys, err := apiKeyRepository.GetAllApiKeys(ctx) // Fetch all existing API keys from the repository.
+	keys, err := repositorySvc.ApiKeyRepository().GetAllApiKeys(ctx) // Fetch all existing API keys from the repository.
 	if err != nil {
 		return nil, err
 	}
@@ -33,15 +34,25 @@ func NewApiKeyService(
 		keysDb[key.ID] = newApiKeyInfo(key) // Populate the in-memory cache with the fetched keys.
 	}
 
-	return &apiKeyService{
-		apiKeyRepository: apiKeyRepository,
-		keysDb:           keysDb,
-	}, nil
+	apiKeySvc := &apiKeyService{
+		repositorySvc: repositorySvc,
+		keysDb:        keysDb,
+		rootApiKey:    rootApiKey,
+	}
+
+	if err := apiKeySvc.createRootApiKey(ctx, rootApiKey); err != nil {
+		return nil, err
+	}
+
+	return apiKeySvc, nil
 }
 
 // apiKeyService is the concrete implementation of the ApiKeyService interface.
 type apiKeyService struct {
-	apiKeyRepository domain.ApiKeyRepository // Repository for interacting with the API key datastore.
+	adminUser string // Username for the admin user.
+	adminPass string // Password for the admin user.
+
+	repositorySvc domain.RepositoryService // Service for interacting with the datastore.
 
 	keysMtx sync.RWMutex          // Mutex for safe concurrent access to the `keysDb` map.
 	keysDb  map[string]apiKeyInfo // In-memory cache of API keys for fast lookup.
@@ -54,16 +65,9 @@ type apiKeyService struct {
 func (a *apiKeyService) CreateApiKey(
 	ctx context.Context, key CreateApiKeyReq,
 ) (string, error) {
-	if key.IsRootKey {
-		if a.rootKeyExists() {
-			return "", ErrRootKeyExists // Ensure only one root key exists.
-		}
-	}
-
 	// Construct a new API key domain object.
 	apiKey, err := domain.NewApiKey(
-		key.IsRootKey,
-		key.Services,
+		key.Service,
 		domain.RateLimit{
 			RequestsPerRange: key.RequestsPerRange,
 			RangeInSeconds:   key.RangeInSeconds,
@@ -74,7 +78,7 @@ func (a *apiKeyService) CreateApiKey(
 	}
 
 	// Save the new API key to the repository.
-	if err = a.apiKeyRepository.CreateApiKey(ctx, *apiKey); err != nil {
+	if err = a.repositorySvc.ApiKeyRepository().CreateApiKey(ctx, *apiKey); err != nil {
 		return "", err
 	}
 
@@ -86,17 +90,17 @@ func (a *apiKeyService) CreateApiKey(
 }
 
 // AllowRequest checks if a given API key is allowed to access a specified path.
-func (a *apiKeyService) AllowRequest(apiKey string, path string) bool {
+func (a *apiKeyService) AllowRequest(apiKey string, path string) error {
 	// Check if the key exists and if it's allowed to access the given path.
 	key, exists := a.getKey(apiKey)
 	if !exists || !key.canAccessServicePath(path) {
 		log.Debugf("Api key %s is not allowed to access %s", apiKey, path)
 
-		return false
+		return ErrUnauthorizedPath
 	}
 
 	if key.isRootKey {
-		return true
+		return nil
 	}
 
 	// Check if the key has exceeded its rate limit.
@@ -105,22 +109,31 @@ func (a *apiKeyService) AllowRequest(apiKey string, path string) bool {
 
 	if isRateLimited {
 		log.Debugf("Api key %s has exceeded its rate limit", apiKey)
+
+		return ErrRateLimitExceeded
 	}
 	log.Debugf("Api key %s is allowed to access %s", apiKey, path)
 
-	return !isRateLimited
+	return nil
 }
 
 // GetServiceApiKey retrieves the API key associated with a specific service.
 func (a *apiKeyService) GetServiceApiKey(
 	ctx context.Context, service string,
 ) (string, error) {
-	apiKey, err := a.apiKeyRepository.GetServiceApiKey(ctx, service)
+	apiKey, err := a.repositorySvc.ApiKeyRepository().GetServiceApiKey(ctx, service)
 	if err != nil {
 		return "", err
 	}
 
 	return apiKey.ID, nil
+}
+
+func (a *apiKeyService) createRootApiKey(
+	ctx context.Context, apiKey string,
+) error {
+	apk := domain.NewRootApiKey(apiKey)
+	return a.repositorySvc.ApiKeyRepository().CreateApiKey(ctx, *apk)
 }
 
 // Below are helper methods for the apiKeyService.
@@ -163,25 +176,20 @@ func (a *apiKeyService) updateKey(key apiKeyInfo) {
 
 // apiKeyInfo represents detailed information about an API key.
 type apiKeyInfo struct {
-	id                  string              // Unique identifier of the API key.
-	allowedEndpoints    map[string]struct{} // List of services or paths the API key has access to.
-	firstRequestInRange *time.Time          // Timestamp of the first request made within the current rate limit range.
-	requestsPerRange    int                 // Max number of requests allowed within the rate limit range.
-	rangeInSeconds      int                 // Duration of the rate limit range in seconds.
-	requestCount        int                 // Number of requests made within the current rate limit range.
-	isRootKey           bool                // Flag indicating if the API key is a root key with unrestricted access.
+	id                  string     // Unique identifier of the API key.
+	allowedEndpoint     string     // List of services or paths the API key has access to.
+	firstRequestInRange *time.Time // Timestamp of the first request made within the current rate limit range.
+	requestsPerRange    int        // Max number of requests allowed within the rate limit range.
+	rangeInSeconds      int        // Duration of the rate limit range in seconds.
+	requestCount        int        // Number of requests made within the current rate limit range.
+	isRootKey           bool       // Flag indicating if the API key is a root key with unrestricted access.
 }
 
 // Construct a new apiKeyInfo from a domain API key.
 func newApiKeyInfo(apiKey domain.ApiKey) apiKeyInfo {
-	allowedEndpoints := make(map[string]struct{})
-	for _, endpoint := range apiKey.Services {
-		allowedEndpoints[endpoint] = struct{}{}
-	}
-
 	return apiKeyInfo{
 		id:                  apiKey.ID,
-		allowedEndpoints:    allowedEndpoints,
+		allowedEndpoint:     apiKey.Service,
 		firstRequestInRange: nil,
 		requestsPerRange:    apiKey.RateLimit.RequestsPerRange,
 		rangeInSeconds:      apiKey.RateLimit.RangeInSeconds,
@@ -192,9 +200,7 @@ func newApiKeyInfo(apiKey domain.ApiKey) apiKeyInfo {
 
 // Check if the API key is allowed to access a given service or path.
 func (ak apiKeyInfo) canAccessServicePath(servicePath string) bool {
-	_, exists := ak.allowedEndpoints[servicePath]
-
-	return exists
+	return ak.allowedEndpoint == servicePath
 }
 
 // Determine if the API key has exceeded its rate limit.
