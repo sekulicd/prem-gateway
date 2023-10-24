@@ -92,7 +92,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${AUTHD_POSTGRES_DB}
     volumes:
-      - dnsd-pg-data:/var/lib/postgresql/data
+      - authd-pg-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   controllerd:
@@ -116,3 +116,4 @@ networks:
 volumes:
   dnsd-pg-data:
   traefik-letsencrypt:
+  authd-pg-data:
