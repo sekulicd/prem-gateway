@@ -73,7 +73,6 @@ services:
       PREM_GATEWAY_AUTH_ADMIN_USER: ${PREM_GATEWAY_AUTH_ADMIN_USER}
       PREM_GATEWAY_AUTH_ADMIN_PASS: ${PREM_GATEWAY_AUTH_ADMIN_PASS}
       PREM_GATEWAY_AUTH_DB_HOST: authd-db-pg
-      PREM_GATEWAY_AUTH_DB_PORT: 5433
     depends_on:
       - authd-db-pg
     ports:
