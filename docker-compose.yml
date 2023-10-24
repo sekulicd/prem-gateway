@@ -68,6 +68,10 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.authd.rule=PathPrefix(`/authd`)"
       - "traefik.http.middlewares.authd-strip-prefix.stripprefix.prefixes=/authd"
+    environment:
+      PREM_GATEWAY_AUTH_ROOT_API_KEY: ${PREM_GATEWAY_AUTH_ROOT_API_KEY}
+      PREM_GATEWAY_AUTH_ROOT_ADMIN_USER: ${PREM_GATEWAY_AUTH_ROOT_ADMIN_USER}
+      PREM_GATEWAY_AUTH_ROOT_ADMIN_PASS: ${PREM_GATEWAY_AUTH_ROOT_ADMIN_PASS}
     ports:
       - "8081:8080"
     restart: unless-stopped

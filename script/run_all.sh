@@ -1,6 +1,15 @@
 #!/bin/bash
-
+BASIC_AUTH_USER="admin"
+BASIC_AUTH_PASS=$(openssl rand -base64 4)
+ROOT_KEY=$(openssl rand -base64 8)
 # Run the 'make up' command with environment variables
+
+PREM_GATEWAY_AUTH_ROOT_API_KEY=$ROOT_KEY
+PREM_GATEWAY_AUTH_ROOT_ADMIN_USER=$BASIC_AUTH_USER
+PREM_GATEWAY_AUTH_ROOT_ADMIN_PASS=$BASIC_AUTH_PASS
+export PREM_GATEWAY_AUTH_ROOT_API_KEY
+export PREM_GATEWAY_AUTH_ROOT_ADMIN_USER
+export PREM_GATEWAY_AUTH_ROOT_ADMIN_PASS
 export LETSENCRYPT_PROD=true
 make up
 
@@ -25,8 +34,6 @@ then
     sudo apt-get install -y openssl
 fi
 
-BASIC_AUTH_USER="admin"
-BASIC_AUTH_PASS=$(openssl rand -base64 4)
 HASH=$(openssl passwd -apr1 $BASIC_AUTH_PASS)
 BASIC_AUTH_CREDENTIALS="$BASIC_AUTH_USER:$HASH"
 export BASIC_AUTH_CREDENTIALS
