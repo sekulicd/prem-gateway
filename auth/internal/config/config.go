@@ -28,7 +28,7 @@ const (
 	DbMigrationPathKey = "DB_MIGRATION_PATH"
 	// RootApiKey is the root API key with unrestricted access
 	RootApiKey = "ROOT_API_KEY"
-	// AdminUserKey is the admin user name
+	// AdminUserKey is the admin username
 	AdminUserKey = "ADMIN_USER"
 	// AdminPassKey is the admin password
 	AdminPassKey = "ADMIN_PASS"
