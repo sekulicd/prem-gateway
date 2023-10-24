@@ -1,7 +1,6 @@
 package httphandler
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -89,17 +88,15 @@ func (a *authHandler) GetServiceApiKey(c *gin.Context) {
 }
 
 func (a *authHandler) IsRequestAllowed(c *gin.Context) {
-	fmt.Println("IsRequestAllowed")
 	apiKey := c.GetHeader("Authorization")
 	host := c.GetHeader("X-Forwarded-Host")
 	uri := c.GetHeader("X-Forwarded-Uri")
+	forwardedFor := c.GetHeader("X-Forwarded-For")
 
-	log.Infof("Authorization header: %s\n", apiKey)
-	log.Infof("X-Forwarded-Host header: %s\n", host)
-	log.Infof("X-Forwarded-Uri header: %s\n", uri)
-	fmt.Println(apiKey)
-	fmt.Println(host)
-	fmt.Println(uri)
+	log.Infof("Authorization header: %s", apiKey)
+	log.Infof("X-Forwarded-Host header: %s", host)
+	log.Infof("X-Forwarded-Uri header: %s", uri)
+	log.Infof("X-Forwarded-For header: %s", forwardedFor)
 
 	service := extractService(host, uri)
 	if err := a.apiKeySvc.AllowRequest(apiKey, service); err != nil {
