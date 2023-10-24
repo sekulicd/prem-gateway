@@ -26,6 +26,8 @@ ARG DIR=/home/authd
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 COPY --from=builder /app/bin/* /usr/local/bin/
+COPY --from=builder /app/internal/infrastructure/storage/pg/migration/* /
+ENV PREM_GATEWAY_AUTH_DB_MIGRATION_PATH=file://
 
 # NOTE: Default GID == UID == 1000
 RUN adduser --disabled-password \
