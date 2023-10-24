@@ -48,7 +48,7 @@ make down
 
 #### In order to restart services outside prem-gateway and to assign them with subdomain/tls certificate, use bellow command.
 ```bash
-make up LETSENCRYPT_PROD=true SERVICES=premd,premapp
+make up LETSENCRYPT_PROD=true
 ```
 
 #### Run prem-gateway with prem-app and prem-daemon:

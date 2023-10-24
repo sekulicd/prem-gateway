@@ -17,7 +17,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.premd.rule=PathPrefix(`/premd`)"
       - "traefik.http.middlewares.premd-strip-prefix.stripprefix.prefixes=/premd"
-      - "traefik.http.routers.premd.middlewares=premd-strip-prefix"
+      - "traefik.http.routers.premd.middlewares=premd-strip-prefix,auth"
+      - "traefik.http.middlewares.auth.forwardauth.address=http://authd:8080/auth/verify"
     ports:
       - "8084:8000"
     restart: unless-stopped

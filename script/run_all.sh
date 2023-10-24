@@ -2,7 +2,6 @@
 
 # Run the 'make up' command with environment variables
 export LETSENCRYPT_PROD=true
-export SERVICES=premd,premapp
 make up
 
 # Loop to check for 'OK' from curl command

@@ -24,27 +24,16 @@ const (
 
 	premappService = "premapp"
 	premdService   = "premd"
+	authdService   = "authd"
+	dnsdService    = "dnsd"
 )
 
 var (
 	letEncryptProd bool
+	services       = []string{premappService, authdService, dnsdService}
 )
 
-type DnsInfo struct {
-	Domain    string `json:"domain"`
-	SubDomain string `json:"sub_domain"`
-	NodeName  string `json:"node_name"`
-	Email     string `json:"email"`
-}
-
 func main() {
-	serviceNames := os.Getenv("SERVICES")
-	services := make([]string, 0)
-	if serviceNames != "" {
-		services = append(services, strings.Split(serviceNames, ",")...)
-	}
-	services = append(services, "dnsd")
-
 	letsEncrypt := os.Getenv("LETSENCRYPT_PROD")
 	if letsEncrypt != "" {
 		letEncryptProd = true
@@ -248,12 +237,25 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 			if err := restartContainer(ctx, cli, v, labels, nil); err != nil {
 				return fmt.Errorf("failed to restart container %s: %v", v, err)
 			}
-		default:
+		case authdService:
 			labels := map[string]string{
 				"traefik.enable": "true",
 				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("PathPrefix(`/`) && Host(`%s.%s`)", v, domain),
 				fmt.Sprintf("traefik.http.routers.%s.entrypoints", v):      "websecure",
 				fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", v): "myresolver",
+			}
+
+			if err := restartContainer(ctx, cli, v, labels, nil); err != nil {
+				return fmt.Errorf("failed to restart container %s: %v", v, err)
+			}
+		case dnsdService, premdService:
+			labels := map[string]string{
+				"traefik.enable": "true",
+				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("PathPrefix(`/`) && Host(`%s.%s`)", v, domain),
+				fmt.Sprintf("traefik.http.routers.%s.entrypoints", v):      "websecure",
+				fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", v): "myresolver",
+				fmt.Sprintf("traefik.http.routers.%s.middlewares", v):      "dnsd-strip-prefix,auth",
+				"traefik.http.middlewares.auth.forwardauth.address":        "http://authd:8080/auth/verify",
 			}
 
 			if err := restartContainer(ctx, cli, v, labels, nil); err != nil {
@@ -275,6 +277,8 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 			"traefik.http.middlewares.http-to-https.redirectscheme.scheme":         "https",
 			fmt.Sprintf("traefik.http.routers.%s-http.middlewares", k):             "http-to-https",
 			fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", k):    strconv.Itoa(v),
+			fmt.Sprintf("traefik.http.routers.%s-https.middlewares", k):            "auth",
+			"traefik.http.middlewares.auth.forwardauth.address":                    "http://authd:8080/auth/verify",
 		}
 
 		if err := restartContainer(ctx, cli, k, labels, nil); err != nil {
