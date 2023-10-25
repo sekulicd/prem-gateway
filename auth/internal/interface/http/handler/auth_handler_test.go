@@ -10,17 +10,17 @@ func TestExtractService(t *testing.T) {
 	}{
 		{
 			host:     "service.prem.com",
-			uri:      "https://service.prem.com/notrelevant/path",
+			uri:      "/notrelevant/path",
 			expected: "service",
 		},
 		{
 			host:     "1.1.1.1",
-			uri:      "http://1.1.1.1/service/v1/chat",
+			uri:      "/service/v1/chat",
 			expected: "service",
 		},
 		{
 			host:     "service.sub.prem.com",
-			uri:      "https://service.sub.prem.com/notrelevant/path",
+			uri:      "/notrelevant/path",
 			expected: "service",
 		},
 	}

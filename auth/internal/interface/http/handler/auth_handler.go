@@ -89,16 +89,28 @@ func (a *authHandler) GetServiceApiKey(c *gin.Context) {
 
 func (a *authHandler) IsRequestAllowed(c *gin.Context) {
 	apiKey := c.GetHeader("Authorization")
-	host := c.GetHeader("X-Forwarded-Host")
 	uri := c.GetHeader("X-Forwarded-Uri")
 	forwardedFor := c.GetHeader("X-Forwarded-For")
 
 	log.Infof("Authorization header: %s", apiKey)
-	log.Infof("X-Forwarded-Host header: %s", host)
 	log.Infof("X-Forwarded-Uri header: %s", uri)
 	log.Infof("X-Forwarded-For header: %s", forwardedFor)
 
-	service := extractService(host, uri)
+	service := extractService(forwardedFor, uri)
+	if service == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": ErrServiceNotFound,
+		})
+		return
+	}
+
+	if apiKey == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": ErrApiKeyNotProvided,
+		})
+		return
+	}
+
 	if err := a.apiKeySvc.AllowRequest(apiKey, service); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": err.Error(),
@@ -115,21 +127,18 @@ func extractService(host string, uri string) string {
 		return "" // Could not parse URI
 	}
 
-	// Using the path from parsed URI
 	path := parsedUri.Path
-
 	if net.ParseIP(host) == nil {
-		// Extract service name from domain
 		parts := strings.Split(host, ".")
 		if len(parts) > 1 {
-			return parts[len(parts)-2] // Return the last but one segment
+			return parts[0]
 		}
 	} else {
-		// Extract service from the URI path
-		uriParts := strings.SplitN(path, "/", 4)
-		if len(uriParts) >= 3 {
-			return uriParts[1] // Considering the leading '/' splits into an empty initial element
+		uriParts := strings.Split(path, "/")
+		if len(uriParts) > 1 {
+			return uriParts[1]
 		}
 	}
-	return "" // Return an empty string if service can't be determined
+
+	return ""
 }
