@@ -210,6 +210,7 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
 
+	log.Infof("Restarting internal services: %v", services)
 	for _, v := range services {
 		switch v {
 		case premappService:
@@ -266,6 +267,7 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 		log.Infof("Restarted container %s\n", v)
 	}
 
+	log.Infof("Restarting internal services: %v", premServices)
 	for k, v := range premServices {
 		labels := map[string]string{
 			"traefik.enable": "true",
