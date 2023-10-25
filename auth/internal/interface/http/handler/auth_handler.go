@@ -3,10 +3,10 @@ package httphandler
 import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"net"
 	"net/http"
 	"net/url"
 	"prem-gateway/auth/internal/core/application"
+	"regexp"
 	"strings"
 )
 
@@ -93,15 +93,13 @@ func (a *authHandler) GetServiceApiKey(c *gin.Context) {
 func (a *authHandler) IsRequestAllowed(c *gin.Context) {
 	apiKey := c.GetHeader("Authorization")
 	uri := c.GetHeader("X-Forwarded-Uri")
-	forwardedFor := c.GetHeader("X-Forwarded-For")
 	host := c.GetHeader("X-Forwarded-Host")
 
 	log.Infof("Authorization header: %s", apiKey)
 	log.Infof("X-Forwarded-Uri header: %s", uri)
-	log.Infof("X-Forwarded-For header: %s", forwardedFor)
 	log.Infof("X-Forwarded-Host header: %s", host)
 
-	service := extractService(forwardedFor, uri)
+	service := extractService(host, uri)
 	if service == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": ErrServiceNotFound,
@@ -134,7 +132,7 @@ func extractService(host string, uri string) string {
 	}
 
 	path := parsedUri.Path
-	if net.ParseIP(host) == nil {
+	if !isValidIP(host) {
 		parts := strings.Split(host, ".")
 		if len(parts) > 1 {
 			return parts[0]
@@ -147,4 +145,10 @@ func extractService(host string, uri string) string {
 	}
 
 	return ""
+}
+
+func isValidIP(ip string) bool {
+	regex := `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+	match, _ := regexp.MatchString(regex, ip)
+	return match
 }
