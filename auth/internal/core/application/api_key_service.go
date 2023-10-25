@@ -143,6 +143,7 @@ func (a *apiKeyService) GetServiceApiKey(
 		return "", ErrUnauthorized
 	}
 
+	log.Infof("Fetching API key for service %s", service)
 	apiKey, err := a.repositorySvc.ApiKeyRepository().GetServiceApiKey(ctx, service)
 	if err != nil {
 		return "", err

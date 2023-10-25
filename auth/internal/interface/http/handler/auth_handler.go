@@ -75,9 +75,9 @@ func (a *authHandler) CreateApiKey(c *gin.Context) {
 
 func (a *authHandler) GetServiceApiKey(c *gin.Context) {
 	apiKey := c.GetHeader("Authorization")
-	service := c.Param("service")
+	serviceName := c.Param("name")
 
-	apiKey, err := a.apiKeySvc.GetServiceApiKey(c, apiKey, service)
+	apiKey, err := a.apiKeySvc.GetServiceApiKey(c, apiKey, serviceName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
