@@ -10,8 +10,8 @@ CONTAINERS=($(docker ps -aq --filter network=prem-gateway))
 if [ ${#CONTAINERS[@]} -eq 0 ]; then
     echo "No containers found on the 'prem-gateway' network."
 else
-    PGVOLUME=($(docker inspect dnsd-db-pg | jq -r '.[0].HostConfig.Mounts[0].Source'))
-
+    DNSD_PG_VOLUME=($(docker inspect dnsd-db-pg | jq -r '.[0].HostConfig.Mounts[0].Source'))
+    AUTH_PG_VOLUME=($(docker inspect auth-db-pg | jq -r '.[0].HostConfig.Mounts[0].Source'))
     # Stop all containers
     echo "Stopping containers on 'prem-gateway' network..."
     for CONTAINER in "${CONTAINERS[@]}"; do
@@ -24,9 +24,9 @@ else
         docker rm "$CONTAINER"
     done
 
-    # Remove dnsd-db-pg volume
-    echo "Remove dnsd-db-pg volume"
-    docker volume rm "$PGVOLUME"
+    # Remove dnsd-db-pg and auth-db-pg volumes
+    docker volume rm "$DNSD_PG_VOLUME"
+    docker volume rm "$AUTH_PG_VOLUME"
 
     echo "Containers stopped and removed. Volumes cleaned."
 fi
