@@ -57,8 +57,4 @@ func main() {
 //add more comments in general to auth
 //add http tests
 //rename NewDBService in dns, check mock
-//update docker
-//traefik labels
-//controllerd labels
 //remove basic auth
-//handle panic recovery
