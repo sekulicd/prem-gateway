@@ -52,7 +52,7 @@ func LoadConfig() error {
 	vip.SetDefault(DbHostKey, "127.0.0.1")
 	vip.SetDefault(DbPortKey, 5432)
 	vip.SetDefault(DbNameKey, "authd-db")
-	vip.SetDefault(DbMigrationPathKey, "file://dns/internal/infrastructure/storage/pg/migration")
+	vip.SetDefault(DbMigrationPathKey, "file://auth/internal/infrastructure/storage/pg/migration")
 
 	if vip.GetString(RootApiKey) == "" {
 		return errors.New("root API key not set")

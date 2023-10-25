@@ -30,8 +30,12 @@ func NewApiKeyService(
 		return nil, err
 	}
 
+	rootKeyExists := false
 	for _, key := range keys {
-		keysDb[key.ID] = newApiKeyInfo(key) // Populate the in-memory cache with the fetched keys.
+		if key.IsRoot {
+			rootKeyExists = true
+		}
+		keysDb[key.ID] = newApiKeyInfo(key)
 	}
 
 	apiKeySvc := &apiKeyService{
@@ -40,8 +44,10 @@ func NewApiKeyService(
 		rootApiKey:    rootApiKey,
 	}
 
-	if err := apiKeySvc.createRootApiKey(ctx, rootApiKey); err != nil {
-		return nil, err
+	if !rootKeyExists {
+		if err := apiKeySvc.createRootApiKey(ctx, rootApiKey); err != nil {
+			return nil, err
+		}
 	}
 
 	return apiKeySvc, nil
@@ -191,12 +197,18 @@ type apiKeyInfo struct {
 
 // Construct a new apiKeyInfo from a domain API key.
 func newApiKeyInfo(apiKey domain.ApiKey) apiKeyInfo {
+	requestsPerRange := 0
+	rangeInSeconds := 0
+	if apiKey.RateLimit != nil {
+		requestsPerRange = apiKey.RateLimit.RequestsPerRange
+		rangeInSeconds = apiKey.RateLimit.RangeInSeconds
+	}
 	return apiKeyInfo{
 		id:                  apiKey.ID,
 		allowedEndpoint:     apiKey.Service,
 		firstRequestInRange: nil,
-		requestsPerRange:    apiKey.RateLimit.RequestsPerRange, //TODO check if nil
-		rangeInSeconds:      apiKey.RateLimit.RangeInSeconds,
+		requestsPerRange:    requestsPerRange,
+		rangeInSeconds:      rangeInSeconds,
 		requestCount:        0,
 		isRootKey:           apiKey.IsRoot,
 	}
