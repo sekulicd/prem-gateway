@@ -109,6 +109,7 @@ func (s *server) Stop() error {
 
 func (s *server) Router() http.Handler {
 	ginEngine := gin.Default()
+	ginEngine.Use(gin.Recovery())
 	ginEngine.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:1420") // Replace with your frontend origin
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH")
