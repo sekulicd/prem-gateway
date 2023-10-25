@@ -5,15 +5,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
-	//_ "prem-gateway/auth/docs"
 	"prem-gateway/auth/internal/config"
 	pgdb "prem-gateway/auth/internal/infrastructure/storage/pg"
 	httpauthd "prem-gateway/auth/internal/interface/http"
 	"syscall"
 )
 
-// @title Dns Daemon API
-// @description     DNS Daemon is designed to manage Domain Name System (DNS) records. <br />It exposes a RESTful API that allows for the creation, modification, retrieval, and deletion of DNS information, as well as checking the status of a DNS entry. <br /> The DNS information includes attributes such as domain, subdomain, A records, and node names.
 func main() {
 	if err := config.LoadConfig(); err != nil {
 		log.Fatalf("failed to load config: %s", err)
@@ -53,8 +50,7 @@ func main() {
 	}
 }
 
-//TODO add swagger, check dnsd swagger
-//add more comments in general to auth
+//TODO
+//e2e test
 //add http tests
-//rename NewDBService in dns, check mock
 //remove basic auth
