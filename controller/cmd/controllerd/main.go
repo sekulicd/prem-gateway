@@ -255,7 +255,7 @@ func restartServicesWithTls(domain string, services []string, premServices map[s
 				fmt.Sprintf("traefik.http.routers.%s.rule", v):             fmt.Sprintf("PathPrefix(`/`) && Host(`%s.%s`)", v, domain),
 				fmt.Sprintf("traefik.http.routers.%s.entrypoints", v):      "websecure",
 				fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", v): "myresolver",
-				fmt.Sprintf("traefik.http.routers.%s.middlewares", v):      "auth,dnsd-strip-prefix",
+				fmt.Sprintf("traefik.http.routers.%s.middlewares", v):      "auth",
 				"traefik.http.middlewares.auth.forwardauth.address":        "http://authd:8080/auth/verify",
 			}
 
