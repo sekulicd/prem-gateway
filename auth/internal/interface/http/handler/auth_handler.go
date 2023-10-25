@@ -94,10 +94,12 @@ func (a *authHandler) IsRequestAllowed(c *gin.Context) {
 	apiKey := c.GetHeader("Authorization")
 	uri := c.GetHeader("X-Forwarded-Uri")
 	forwardedFor := c.GetHeader("X-Forwarded-For")
+	host := c.GetHeader("X-Forwarded-Host")
 
 	log.Infof("Authorization header: %s", apiKey)
 	log.Infof("X-Forwarded-Uri header: %s", uri)
 	log.Infof("X-Forwarded-For header: %s", forwardedFor)
+	log.Infof("X-Forwarded-Host header: %s", host)
 
 	service := extractService(forwardedFor, uri)
 	if service == "" {
