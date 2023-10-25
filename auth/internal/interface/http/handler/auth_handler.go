@@ -103,6 +103,7 @@ func (a *authHandler) IsRequestAllowed(c *gin.Context) {
 		})
 		return
 	}
+	log.Infof("Service: %s", service)
 
 	if apiKey == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{

@@ -91,6 +91,10 @@ func (a *apiKeyService) CreateApiKey(
 
 // AllowRequest checks if a given API key is allowed to access a specified path.
 func (a *apiKeyService) AllowRequest(apiKey string, path string) error {
+	if a.isRootKey(apiKey) {
+		return nil
+	}
+
 	// Check if the key exists and if it's allowed to access the given path.
 	key, exists := a.getKey(apiKey)
 	if !exists || !key.canAccessServicePath(path) {
