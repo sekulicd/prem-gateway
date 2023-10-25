@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"github.com/jackc/pgconn"
-	log "github.com/sirupsen/logrus"
 	"prem-gateway/auth/internal/core/domain"
 	"prem-gateway/auth/internal/infrastructure/storage/pg/sqlc/queries"
 )
@@ -143,7 +142,6 @@ func (a *apiKeyRepositoryImpl) GetServiceApiKey(
 		return nil, err
 	}
 
-	log.Infof("Found %d API keys for service %s", len(apiKeysRows), serviceName)
 	if len(apiKeysRows) == 0 {
 		return nil, domain.ErrApiKeyNotFound
 	}

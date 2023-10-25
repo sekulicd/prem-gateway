@@ -75,7 +75,7 @@ func (a *authHandler) CreateApiKey(c *gin.Context) {
 
 func (a *authHandler) GetServiceApiKey(c *gin.Context) {
 	apiKey := c.GetHeader("Authorization")
-	serviceName := c.Param("name")
+	serviceName := c.Query("name")
 
 	apiKey, err := a.apiKeySvc.GetServiceApiKey(c, apiKey, serviceName)
 	if err != nil {
