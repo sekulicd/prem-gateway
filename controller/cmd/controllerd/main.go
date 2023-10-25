@@ -30,7 +30,7 @@ const (
 
 var (
 	letEncryptProd bool
-	services       = []string{premappService, authdService, dnsdService}
+	services       = []string{premappService, premdService, authdService, dnsdService}
 )
 
 func main() {
