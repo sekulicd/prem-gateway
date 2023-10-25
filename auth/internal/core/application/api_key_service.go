@@ -11,11 +11,15 @@ import (
 // ApiKeyService defines the interface for managing API keys.
 type ApiKeyService interface {
 	// CreateApiKey creates a new API key.
-	CreateApiKey(ctx context.Context, key CreateApiKeyReq) (string, error)
+	CreateApiKey(
+		ctx context.Context, rootApiKey string, key CreateApiKeyReq,
+	) (string, error)
 	// AllowRequest checks if a given API key is allowed to access a specified path.
 	AllowRequest(apiKey string, path string) error
 	// GetServiceApiKey fetches the API key for a specific service.
-	GetServiceApiKey(ctx context.Context, service string) (string, error)
+	GetServiceApiKey(
+		ctx context.Context, rootApiKey, service string,
+	) (string, error)
 }
 
 // NewApiKeyService constructs a new instance of the ApiKeyService.
@@ -69,8 +73,12 @@ type apiKeyService struct {
 
 // CreateApiKey creates a new API key and saves it in the datastore.
 func (a *apiKeyService) CreateApiKey(
-	ctx context.Context, key CreateApiKeyReq,
+	ctx context.Context, rootApiKey string, key CreateApiKeyReq,
 ) (string, error) {
+	if !a.isRootKey(rootApiKey) {
+		return "", ErrUnauthorized
+	}
+
 	// Construct a new API key domain object.
 	apiKey, err := domain.NewApiKey(
 		key.Service,
@@ -129,8 +137,12 @@ func (a *apiKeyService) AllowRequest(apiKey string, path string) error {
 
 // GetServiceApiKey retrieves the API key associated with a specific service.
 func (a *apiKeyService) GetServiceApiKey(
-	ctx context.Context, service string,
+	ctx context.Context, rootApiKey, service string,
 ) (string, error) {
+	if !a.isRootKey(rootApiKey) {
+		return "", ErrUnauthorized
+	}
+
 	apiKey, err := a.repositorySvc.ApiKeyRepository().GetServiceApiKey(ctx, service)
 	if err != nil {
 		return "", err

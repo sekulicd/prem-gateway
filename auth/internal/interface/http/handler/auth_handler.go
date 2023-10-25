@@ -50,6 +50,8 @@ func (a *authHandler) LogIn(c *gin.Context) {
 }
 
 func (a *authHandler) CreateApiKey(c *gin.Context) {
+	apiKey := c.GetHeader("Authorization")
+
 	var req CreateApiKey
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -58,7 +60,7 @@ func (a *authHandler) CreateApiKey(c *gin.Context) {
 		return
 	}
 
-	id, err := a.apiKeySvc.CreateApiKey(c, ToAppCreateApiKeyInfo(req))
+	id, err := a.apiKeySvc.CreateApiKey(c, apiKey, ToAppCreateApiKeyInfo(req))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -72,9 +74,10 @@ func (a *authHandler) CreateApiKey(c *gin.Context) {
 }
 
 func (a *authHandler) GetServiceApiKey(c *gin.Context) {
+	apiKey := c.GetHeader("Authorization")
 	service := c.Param("service")
 
-	apiKey, err := a.apiKeySvc.GetServiceApiKey(c, service)
+	apiKey, err := a.apiKeySvc.GetServiceApiKey(c, apiKey, service)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
