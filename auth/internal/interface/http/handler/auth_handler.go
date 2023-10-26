@@ -116,9 +116,12 @@ func (a *authHandler) IsRequestAllowed(c *gin.Context) {
 	}
 
 	if err := a.apiKeySvc.AllowRequest(apiKey, service); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": err.Error(),
-		})
+		if err == application.ErrRateLimitExceeded {
+			c.JSON(http.StatusTooManyRequests, gin.H{})
+			return
+		}
+
+		c.JSON(http.StatusUnauthorized, gin.H{})
 		return
 	}
 

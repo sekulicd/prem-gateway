@@ -49,6 +49,3 @@ func main() {
 		log.Panicf("prem-gateway auth daemon noticed error while running: %s", err)
 	}
 }
-
-//TODO
-//add http tests
