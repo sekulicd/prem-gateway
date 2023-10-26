@@ -34,10 +34,6 @@ then
     sudo apt-get install -y openssl
 fi
 
-HASH=$(openssl passwd -apr1 $BASIC_AUTH_PASS)
-BASIC_AUTH_CREDENTIALS="$BASIC_AUTH_USER:$HASH"
-export BASIC_AUTH_CREDENTIALS
-
 # Run the 'docker-compose' command with environment variables
 export PREMD_IMAGE
 export PREMAPP_IMAGE

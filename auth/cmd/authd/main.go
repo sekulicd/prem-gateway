@@ -51,6 +51,4 @@ func main() {
 }
 
 //TODO
-//e2e test
 //add http tests
-//remove basic auth

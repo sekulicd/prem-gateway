@@ -8,10 +8,10 @@ It is responsible for routing requests from the frontend `prem-app` to either th
 ## Features
 
 - [x] API Gateway
-- [ ] Authentication/Authorization
+- [x] Authentication/Authorization
 - [x] Domain Management
 - [x] TLS
-- [ ] Rate Limiting
+- [x] Rate Limiting
 - [ ] Logging
 - [ ] Metrics
 
