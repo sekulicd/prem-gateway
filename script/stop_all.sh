@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Ensure the script stops on first error
-set -e
-
 # Get all container IDs connected to the 'prem-gateway' network
 CONTAINERS=($(docker ps -aq --filter network=prem-gateway))
 

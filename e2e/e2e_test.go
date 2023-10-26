@@ -12,8 +12,12 @@ import (
 	"time"
 )
 
-// TestDnsFeature is an end-to-end test with purpose of documenting DNS/TLS
-// feature and traefik routing.
+var (
+	client = &http.Client{}
+)
+
+// TestE2eFeatures is an end-to-end test with purpose of documenting DNS/TLS/Auth
+// features and traefik routing.
 // First it queries premd service to get all services and their base urls and it
 // shows how traefik routes requests to by path.
 // Then it creates DNS record for domain and it shows how traefik routes requests
@@ -25,18 +29,55 @@ import (
 // Eg. considering domain example.com and prem-gateway IP address
 // 1. Create A record for example.com with value prem-gateway IP address
 // 2. Create A record for *.example.com with value prem-gateway IP address
-func TestDnsFeature(t *testing.T) {
+// Env. variables:
+// PREM_GATEWAY_IP - IP address of prem-gateway
+// USER_NAME - username for basic auth
+// PASSWORD - password for basic auth
+// DOMAIN - domain for DNS record
+// EMAIL - email for DNS record
+func TestE2eFeatures(t *testing.T) {
 	premGatewayIP := os.Getenv("PREM_GATEWAY_IP")
 	if premGatewayIP == "" {
 		t.Fatal("PREM_GATEWAY_IP environment variable not set")
 	}
 
-	servicesUrls := make([]ExtractedFields, 0)
+	userName := os.Getenv("USER_NAME")
+	if userName == "" {
+		t.Fatal("USER_NAME environment variable not set")
+	}
 
-	resp, err := http.Get(fmt.Sprintf("http://%s/%s", premGatewayIP, "premd/v1/services/"))
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		t.Fatal("PASSWORD environment variable not set")
+	}
+
+	//GET ROOT API KEY
+	resp, err := http.Get(
+		fmt.Sprintf(
+			"http://%s/%s?user=%s&pass=%s",
+			premGatewayIP,
+			"authd/auth/login",
+			userName,
+			password,
+		),
+	)
+	assert.NoError(t, err)
+	apiKey := make(map[string]string)
+	err = json.NewDecoder(resp.Body).Decode(&apiKey)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	rootApiKey := apiKey["api_key"]
+	assert.NotEmpty(t, rootApiKey)
 
+	servicesUrls := make([]ExtractedFields, 0)
+
+	url := fmt.Sprintf("http://%s/%s", premGatewayIP, "premd/v1/services/")
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	err = json.NewDecoder(resp.Body).Decode(&servicesUrls)
 	assert.NoError(t, err)
 
@@ -44,10 +85,13 @@ func TestDnsFeature(t *testing.T) {
 		assert.Equal(t, v.BaseUrl, fmt.Sprintf("http://%s/%s", premGatewayIP, v.ServiceId))
 	}
 
-	resp, err = http.Get(fmt.Sprintf("http://%s/%s", premGatewayIP, "dnsd/dns/existing"))
+	url = fmt.Sprintf("http://%s/%s", premGatewayIP, "dnsd/dns/existing")
+	req, err = http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
 	bodyBytes, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	assert.Equal(t, string(bodyBytes), "null")
@@ -72,21 +116,24 @@ func TestDnsFeature(t *testing.T) {
 	jsonValue, err := json.Marshal(dnsCreateReq)
 	assert.NoError(t, err)
 
-	resp, err = http.Post(
-		fmt.Sprintf("http://%s/%s", premGatewayIP, "dnsd/dns"),
-		"application/json",
-		bytes.NewBuffer(jsonValue),
-	)
+	url = fmt.Sprintf("http://%s/%s", premGatewayIP, "dnsd/dns")
+	req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	time.Sleep(10 * time.Second) // Wait for controller to restart services
 
 	// GET PREMD SERVICES VIA SUBDOMAIN
-	resp, err = http.Get(fmt.Sprintf("https://%s.%s/%s", "premd", dnsCreateReq.Domain, "v1/services/"))
+	url = fmt.Sprintf("https://%s.%s/%s", "premd", dnsCreateReq.Domain, "v1/services/")
+	req, err = http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
 	servicesUrls = make([]ExtractedFields, 0)
 	err = json.NewDecoder(resp.Body).Decode(&servicesUrls)
 	assert.NoError(t, err)
@@ -95,10 +142,13 @@ func TestDnsFeature(t *testing.T) {
 		assert.Equal(t, v.BaseUrl, fmt.Sprintf("https://%s.%s", v.ServiceId, dnsCreateReq.Domain))
 	}
 
-	resp, err = http.Get(fmt.Sprintf("https://%s.%s/%s", "dnsd", dnsCreateReq.Domain, "dns/existing"))
+	url = fmt.Sprintf("https://%s.%s/%s", "dnsd", dnsCreateReq.Domain, "dns/existing")
+	req, err = http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
 	checkDns := DnsInfo{}
 	bodyBytes, err = io.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -115,11 +165,11 @@ func TestDnsFeature(t *testing.T) {
 	jsonValue, err = json.Marshal(runService)
 	assert.NoError(t, err)
 
-	resp, err = http.Post(
-		fmt.Sprintf("https://%s.%s/%s", "premd", dnsCreateReq.Domain, "v1/run-service/"),
-		"application/json",
-		bytes.NewBuffer(jsonValue),
-	)
+	url = fmt.Sprintf("https://%s.%s/%s", "premd", dnsCreateReq.Domain, "v1/run-service/")
+	req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -151,7 +201,33 @@ func TestDnsFeature(t *testing.T) {
 		bytes.NewBuffer(jsonValue),
 	)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+	createApiKeyReq := CreateApiKey{
+		ServiceName:      "gpt4all-lora-q4",
+		RequestsPerRange: 10,
+		RangeInMinutes:   1,
+	}
+
+	jsonValue, err = json.Marshal(createApiKeyReq)
+	assert.NoError(t, err)
+	url = fmt.Sprintf("https://%s.%s/%s", "authd", dnsCreateReq.Domain, "auth/api-key")
+	req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", rootApiKey)
+	resp, err = client.Do(req)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	apiKey = make(map[string]string)
+	err = json.NewDecoder(resp.Body).Decode(&apiKey)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	serviceApiKey := apiKey["api_key"]
+
+	url = fmt.Sprintf("https://%s.%s/%s", "gpt4all-lora-q4", dnsCreateReq.Domain, "v1/chat/completions")
+	req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	req.Header.Add("Authorization", serviceApiKey)
+	resp, err = client.Do(req)
 	bodyBytes, err = io.ReadAll(resp.Body)
 	resp.Body.Close()
 	t.Log(string(bodyBytes))
@@ -190,4 +266,10 @@ type ChatRequest struct {
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
+}
+
+type CreateApiKey struct {
+	ServiceName      string `json:"service_name"`
+	RequestsPerRange int    `json:"requests_per_range"`
+	RangeInMinutes   int    `json:"range_in_minutes"`
 }
