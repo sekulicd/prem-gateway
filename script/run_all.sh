@@ -26,16 +26,7 @@ then
     sudo apt-get install -y openssl
 fi
 
-BASIC_AUTH_USER="admin"
-BASIC_AUTH_PASS=$(openssl rand -base64 4)
-HASH=$(openssl passwd -apr1 $BASIC_AUTH_PASS)
-BASIC_AUTH_CREDENTIALS="$BASIC_AUTH_USER:$HASH"
-export BASIC_AUTH_CREDENTIALS
-
 # Run the 'docker-compose' command with environment variables
 export PREMD_IMAGE
 export PREMAPP_IMAGE
 docker-compose -f docker-compose-box.yml up -d --build
-
-echo "Basic auth user: $BASIC_AUTH_USER"
-echo "Basic auth pass: $BASIC_AUTH_PASS"
