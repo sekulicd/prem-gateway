@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	log "github.com/sirupsen/logrus"
+	"net/url"
 	"prem-gateway/dns/internal/core/domain"
 	"prem-gateway/dns/internal/infrastructure/storage/pg/sqlc/queries"
 
@@ -141,7 +142,7 @@ func insecureDataSourceStr(dbConfig DbConfig) string {
 	return fmt.Sprintf(
 		insecureDataSourceTemplate,
 		dbConfig.DbUser,
-		dbConfig.DbPassword,
+		url.QueryEscape(dbConfig.DbPassword),
 		dbConfig.DbHost,
 		dbConfig.DbPort,
 		dbConfig.DbName,
